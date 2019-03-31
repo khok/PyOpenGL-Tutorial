@@ -22,32 +22,6 @@ vertexPositions = np.array(
 vertexDim = 4
 nVertices = 3
 
-# Function that creates and compiles shaders according to the given type (a GL enum value) and 
-# shader program (a string containing a GLSL program).
-def createShader(shaderType, shaderFile):
-    shader = glCreateShader(shaderType)
-    glShaderSource(shader, shaderFile) # note that this is a simpler function call than in C
-    
-    glCompileShader(shader)
-    
-    status = None
-    glGetShaderiv(shader, GL_COMPILE_STATUS, status)
-    if status == GL_FALSE:
-        # Note that getting the error log is much simpler in Python than in C/C++
-        # and does not require explicit handling of the string buffer
-        strInfoLog = glGetShaderInforLog(shader)
-        strShaderType = ""
-        if shaderType is GL_VERTEX_SHADER:
-            strShaderType = "vertex"
-        elif shaderType is GL_GEOMETRY_SHADER:
-            strShaderType = "geometry"
-        elif shaderType is GL_FRAGMENT_SHADER:
-            strShaderType = "fragment"
-        
-        print "Compilation failure for " + strShaderType + " shader:\n" + strInfoLog
-    
-    return shader
-
 # String containing vertex shader program written in GLSL
 strVertexShader = """
 #version 330
@@ -154,12 +128,16 @@ def main():
     
     window = glutCreateWindow("Triangle Window: Tut1")
     
-    init()
-    glutDisplayFunc(display) 
-    glutReshapeFunc(reshape)
-    glutKeyboardFunc(keyboard)
-    
-    glutMainLoop();    
+    try:
+        init()
+        glutDisplayFunc(display) 
+        glutReshapeFunc(reshape)
+        glutKeyboardFunc(keyboard)
+
+        glutMainLoop();
+    except Exception as e:
+        print(e)
+        exit(1)
 
 if __name__ == '__main__':
     main()

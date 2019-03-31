@@ -14,28 +14,20 @@ import os
 import sys
 
 # Function that creates and compiles shaders according to the given type (a GL enum value) and 
-# shader program (a file containing a GLSL program).
-def loadShader(shaderType, shaderFile):
-    # check if file exists, get full path name
-    strFilename = findFileOrThrow(shaderFile)
-    shaderData = None
-    with open(strFilename, 'r') as f:
-        shaderData = f.read()
-    
+# shader program (a string containing a GLSL program).
+def createShader(shaderType, shaderFile):
+    # print('Compiling shader:\n', shaderFile)
     shader = glCreateShader(shaderType)
-    glShaderSource(shader, shaderData) # note that this is a simpler function call than in C
+    glShaderSource(shader, shaderFile) # note that this is a simpler function call than in C
     
-    # This shader compilation is more explicit than the one used in
-    # framework.cpp, which relies on a glutil wrapper function.
-    # This is made explicit here mainly to decrease dependence on pyOpenGL
-    # utilities and wrappers, which docs caution may change in future versions.
     glCompileShader(shader)
     
     status = glGetShaderiv(shader, GL_COMPILE_STATUS)
+
     if status == GL_FALSE:
         # Note that getting the error log is much simpler in Python than in C/C++
         # and does not require explicit handling of the string buffer
-        strInfoLog = glGetShaderInforLog(shader)
+        strInfoLog = glGetShaderInfoLog(shader).decode()
         strShaderType = ""
         if shaderType is GL_VERTEX_SHADER:
             strShaderType = "vertex"
@@ -44,9 +36,22 @@ def loadShader(shaderType, shaderFile):
         elif shaderType is GL_FRAGMENT_SHADER:
             strShaderType = "fragment"
         
-        print "Compilation failure for " + strShaderType + " shader:\n" + strInfoLog
+        print('Compilation failure for %s shader:\n%s' % (strShaderType, strInfoLog))
     
     return shader
+
+
+# Function that creates and compiles shaders according to the given type (a GL enum value) and 
+# shader program (a file containing a GLSL program).
+def loadShader(shaderType, shaderFile):
+    # check if file exists, get full path name
+    strFilename = findFileOrThrow(shaderFile)
+    shaderData = None
+    with open(strFilename, 'r') as f:
+        shaderData = f.read()
+
+    return loadShader(shaderType, shaderData)
+
 
 # Function that accepts a list of shaders, compiles them, and returns a handle to the compiled program
 def createProgram(shaderList):
@@ -61,8 +66,8 @@ def createProgram(shaderList):
     if status == GL_FALSE:
         # Note that getting the error log is much simpler in Python than in C/C++
         # and does not require explicit handling of the string buffer
-        strInfoLog = glGetProgramInfoLog(program)
-        print "Linker failure: \n" + strInfoLog
+        strInfoLog = glGetProgramInfoLog(program).decode()
+        raise Exception("Linker failure: \n" + strInfoLog)
         
     for shader in shaderList:
         glDetachShader(program, shader)
@@ -87,4 +92,3 @@ def findFileOrThrow(strBasename):
         return strFilename
         
     raise IOError('Could not find target file ' + strBasename)
-    
