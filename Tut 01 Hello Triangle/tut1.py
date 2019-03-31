@@ -48,7 +48,7 @@ void main()
 theProgram = None
 
 # Global variable to represent the buffer that will hold the position vectors
-positionBufferObject = None
+vao = None
 
 
 
@@ -67,22 +67,35 @@ def initializeProgram():
 
 # Set up the vertex buffer that will store our vertex coordinates for OpenGL's access
 def initializeVertexBuffer():
-    global positionBufferObject
-    positionBufferObject = glGenBuffers(1)
+    vbo = glGenBuffers(1)
     
-    glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject)
+    glBindBuffer(GL_ARRAY_BUFFER, vbo)
     glBufferData( # PyOpenGL allows for the omission of the size parameter
         GL_ARRAY_BUFFER,
         vertexPositions,
         GL_STATIC_DRAW
     )
     glBindBuffer(GL_ARRAY_BUFFER, 0)
+    return vbo
+
+def initializeVertexArray(vbo):
+    vao = glGenVertexArrays(1)
+
+    glBindVertexArray(vao)
+    glBindBuffer(GL_ARRAY_BUFFER, vbo)
+
+    glVertexAttribPointer(0, vertexDim, GL_FLOAT, GL_FALSE, 0, None)
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
+    glBindVertexArray(0)
+    return vao
+
 
 # Initialize the OpenGL environment
 def init():
+    global vao
     initializeProgram()
-    initializeVertexBuffer()
-    glBindVertexArray(glGenVertexArrays(1))
+    vao = initializeVertexArray(initializeVertexBuffer())
 
 # Called to update the display. 
 # Because we are using double-buffering, glutSwapBuffers is called at the end
@@ -92,15 +105,14 @@ def display():
     glClear(GL_COLOR_BUFFER_BIT)
     
     glUseProgram(theProgram)
-    
-    glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject)
+    glBindVertexArray(vao)
+
     glEnableVertexAttribArray(0)
-    glVertexAttribPointer(0, vertexDim, GL_FLOAT, GL_FALSE, 0, None)
-    
     glDrawArrays(GL_TRIANGLES, 0, nVertices)
-    
     glDisableVertexAttribArray(0)
+
     glUseProgram(0)
+    glBindVertexArray(0)
     
     glutSwapBuffers()
 
