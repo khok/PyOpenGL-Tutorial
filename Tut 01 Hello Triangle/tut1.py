@@ -117,6 +117,7 @@ def reshape(w, h):
 # The main function
 def main():
     glutInit()
+    glutInitContextVersion(3, 3);
     displayMode = GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH | GLUT_STENCIL;
     glutInitDisplayMode (displayMode)
     
